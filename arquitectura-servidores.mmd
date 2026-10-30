@@ -1,0 +1,70 @@
+graph LR
+    subgraph Capa_Cliente [" 👥 Clientes "]
+        C1([Cliente Web])
+        C2([Cliente Móvil])
+    end
+
+    subgraph Capa_Balanceo [" ⚖️ Balanceo "]
+        LB{{Balanceador de Carga<br/>Nginx / HAProxy}}
+    end
+
+    subgraph Capa_Procesamiento [" ⚙️ Servidores "]
+        W1(Worker 1<br/>Thread Pool)
+        W2(Worker 2<br/>Thread Pool)
+        W3(Worker N<br/>Thread Pool)
+    end
+
+    subgraph Capa_Mensajeria [" 📨 Mensajería "]
+        MQ[(RabbitMQ<br/>Cola de Mensajes)]
+    end
+
+    subgraph Capa_Almacenamiento [" 💾 Almacenamiento "]
+        DB[(PostgreSQL<br/>Base de Datos)]
+        S3[(S3 Bucket<br/>Archivos)]
+    end
+
+    C1 ==>|HTTP/HTTPS| LB
+    C2 ==>|HTTP/HTTPS| LB
+
+    LB -->|Distribuye Tráfico| W1
+    LB -->|Distribuye Tráfico| W2
+    LB -->|Distribuye Tráfico| W3
+
+    W1 <-->|Pub/Sub| MQ
+    W2 <-->|Pub/Sub| MQ
+    W3 <-->|Pub/Sub| MQ
+
+    W1 -->|Lectura/Escritura| DB
+    W2 -->|Lectura/Escritura| DB
+    W3 -->|Lectura/Escritura| DB
+
+    W1 -.->|Subida/Descarga| S3
+    W2 -.->|Subida/Descarga| S3
+    W3 -.->|Subida/Descarga| S3
+
+    %% Estilos de nodos
+    classDef cliente fill:#e0e7ff,stroke:#4f46e5,stroke-width:2px,color:#1e1b4b;
+    classDef balanceo fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#78350f;
+    classDef worker fill:#cffafe,stroke:#0891b2,stroke-width:2px,color:#164e63;
+    classDef cola fill:#ffe4e6,stroke:#e11d48,stroke-width:2px,color:#881337;
+    classDef storage fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#14532d;
+
+    class C1,C2 cliente;
+    class LB balanceo;
+    class W1,W2,W3 worker;
+    class MQ cola;
+    class DB,S3 storage;
+
+    %% Estilos de capas
+    style Capa_Cliente fill:#f5f7ff,stroke:#a5b4fc,stroke-dasharray:6 4
+    style Capa_Balanceo fill:#fffbeb,stroke:#fcd34d,stroke-dasharray:6 4
+    style Capa_Procesamiento fill:#ecfeff,stroke:#67e8f9,stroke-dasharray:6 4
+    style Capa_Mensajeria fill:#fff1f2,stroke:#fda4af,stroke-dasharray:6 4
+    style Capa_Almacenamiento fill:#f0fdf4,stroke:#86efac,stroke-dasharray:6 4
+
+    %% Estilos de conexiones
+    linkStyle 0,1 stroke:#4f46e5,stroke-width:3px
+    linkStyle 2,3,4 stroke:#d97706,stroke-width:2px
+    linkStyle 5,6,7 stroke:#e11d48,stroke-width:2px
+    linkStyle 8,9,10 stroke:#16a34a,stroke-width:2px
+    linkStyle 11,12,13 stroke:#16a34a,stroke-width:2px,stroke-dasharray:4 4
